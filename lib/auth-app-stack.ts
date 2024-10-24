@@ -6,6 +6,9 @@ import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as node from "aws-cdk-lib/aws-lambda-nodejs";
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as path from 'path';  // You need this import for path.join
+
 export class AuthAppStack extends cdk.Stack {
   private auth: apig.IResource;
   private userPoolId: string;
@@ -37,9 +40,17 @@ export class AuthAppStack extends cdk.Stack {
     });
 
     this.auth = authApi.root.addResource("auth");
+
+    // Use the addAuthRoute method to add routes
+    this.addAuthRoute(
+      "signup",
+      "POST",
+      "SignupFn",
+      'signup.ts'
+    );
   }
 
-  // NEW
+  // Method to add Lambda routes with API Gateway
   private addAuthRoute(
     resourceName: string,
     method: string,
@@ -64,9 +75,9 @@ export class AuthAppStack extends cdk.Stack {
     
     const fn = new node.NodejsFunction(this, fnName, {
       ...commonFnProps,
-      entry: `${__dirname}/../lambdas/auth/${fnEntry}`,
+      entry: path.join(__dirname, `../lambda/lambdas/auth/${fnEntry}`),  // Use path.join for portability
     });
 
     resource.addMethod(method, new apig.LambdaIntegration(fn));
-  }  // end private method
+  }
 }
